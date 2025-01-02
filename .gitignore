@@ -1,0 +1,13 @@
+**/netbox
+**/netbox-docker
+**/*.pyc
+**/__pycache__
+**/.idea
+.vscode/
+dist/*
+ci/docker-compose.override.yml
+ci/reports
+out/production
+*.iml
+build/*
+netbox_excel.egg-info/*
