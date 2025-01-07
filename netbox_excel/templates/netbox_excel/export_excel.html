@@ -46,8 +46,8 @@
                 <div class="modal-body">
                     <label for="type_export" class="form-label">Type export</label>
                     <select class="form-select" aria-label="Default select example" id="type_select">
-                        <option value="only_device" selected>Only device</option>
-                        <option value="all_view_rack">All view Rack</option>
+                        <option value="all_view_rack" selected>All view rack</option>
+                        <option value="only_device">Only device</option>
                     </select>
                     <input type="hidden" name="type" id="type_export" class="hidden" value="all_data">
                     <input type="hidden" name="quick_search" id="quick_search_export" class="hidden">
@@ -56,7 +56,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">cancle</button>
-                    <button type="submit" class="btn btn-primary" id="submit_form_export"
+                    <button type="submit" class="btn btn-primary" id="submit_form_export" data-bs-dismiss="modal"
                         onclick="submit_export()">Export</button>
                 </div>
             </form>

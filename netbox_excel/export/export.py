@@ -25,6 +25,9 @@ def export_all_view_rack():
 
         # start loop for chuẩn bị dữ liệu export
         for device in devices_list:
+            #Kiểm tra nếu thiết bị không nằm trong tủ rack hoặc không có position bỏ qua 
+            if device.position is None:
+                continue
             # get data custom feild
             device_owner = ""
             year_of_investment = ""
@@ -99,11 +102,13 @@ def export_all_view_rack():
                         sheet.merge_cells(start_row=height_device_in_sheet, start_column=8, end_row=u_height_sheet, end_column=8)
                         sheet.merge_cells(start_row=height_device_in_sheet, start_column=9, end_row=u_height_sheet, end_column=9)
                         sheet.merge_cells(start_row=height_device_in_sheet, start_column=10, end_row=u_height_sheet, end_column=10)
+                else:
                     # add item into sheet
                     empty_item = [rack,u_height_rack]
                     sheet.append(empty_item)
                     # print(f"add empty into rack {rack} and U{u_height_rack}")
                 # variable counter
+                
                 u_height_rack-= 1
                 u_height_sheet+= 1
 
