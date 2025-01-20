@@ -91,7 +91,7 @@ def export_all_view_rack():
                         # Từ cột thứ 3 đến cuối đều cần merg ô bằng chiều cao của thiết bị
                         height_device_in_sheet = u_height_sheet - device.u_number + 1
                         # copy data từ row position sang ô đầu tiên
-                        for col in range(3, 10):
+                        for col in range(3, 11):
                             sheet.cell(row=height_device_in_sheet, column=col).value = sheet.cell(row=u_height_sheet, column=col).value
                         
                         sheet.merge_cells(start_row=height_device_in_sheet, start_column=3, end_row=u_height_sheet, end_column=3)
