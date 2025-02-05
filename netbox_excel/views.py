@@ -3,7 +3,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from .forms import ImportExcelForm, ExportExcelForm
 from netbox_excel.models import ExportExcel
 from django.views.decorators.csrf import requires_csrf_token
-from netbox_excel.export import get_device, export_all_view_rack, export_only_device
+from netbox_excel.export import get_device, export_all_view_rack, export_only_device, export_all_rack
 import openpyxl
 
 
@@ -24,7 +24,8 @@ def ExportExcelView(request):
         if type == "only_device":
             workbook = export_only_device()
         else: 
-            workbook = export_all_view_rack()
+            #workbook = export_all_view_rack()
+            workbook = export_all_rack()
         # add header response
         response = HttpResponse(content_type='application/vnd.ms-excel')
         response['Content-Disposition'] = 'attachment;filename="device_export_excel.xlsx"'
