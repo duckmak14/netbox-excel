@@ -20,6 +20,7 @@ class ImportExcel(NetBoxModel,TagsMixin):
         return self.name
     
 class ExportExcel(models.Model):
+    id = models.IntegerField(primary_key=True)
     rack = models.CharField(null=True, blank=True)
     u_number = models.CharField(null=True, blank=True)
     u_end = models.CharField(null=True, blank=True)

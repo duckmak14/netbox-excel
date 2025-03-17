@@ -1,6 +1,6 @@
 import openpyxl
 from netbox_excel.models import ExportExcel
-from .devices import get_device
+from .devices import get_device, get_device_type_parent, get_devices_child , get_device_by_id
 from .rack import get_rack_have_device
 import pandas as pd
 # from io import StringIO
@@ -137,8 +137,10 @@ def export_all_rack():
     sheet.append(headers)
     
     try:
+        # check_device = get_devices_child(654)
         racks_list = get_rack_have_device()
         devices_list = get_device()
+        device_type_parent = get_device_type_parent()
         item_sheet_list = [] # danh sách item device đã xử lý dữ liệu
         # start loop for chuẩn bị dữ liệu export
         for device in devices_list:
@@ -160,6 +162,7 @@ def export_all_rack():
 
             # create new item export
             item_export = ExportExcel(
+                id = device.id,
                 rack = str(device.rack),
                 device_role = str(device.role),
                 device_type = str(device.device_type),
@@ -197,23 +200,95 @@ def export_all_rack():
                         device.device_description,
                     ]
                     
-                    sheet.append(item)
                     # check height > 1 => merg cell 
                     if device.u_number > 1:
-                        # Từ cột thứ 3 đến cuối đều cần merg ô bằng chiều cao của thiết bị
-                        height_device_in_sheet = u_height_sheet - device.u_number + 1
-                        # copy data từ row position sang ô đầu tiên
-                        for col in range(3, 11):
-                            sheet.cell(row=height_device_in_sheet, column=col).value = sheet.cell(row=u_height_sheet, column=col).value
-                        
-                        sheet.merge_cells(start_row=height_device_in_sheet, start_column=3, end_row=u_height_sheet, end_column=3)
-                        sheet.merge_cells(start_row=height_device_in_sheet, start_column=4, end_row=u_height_sheet, end_column=4)
-                        sheet.merge_cells(start_row=height_device_in_sheet, start_column=5, end_row=u_height_sheet, end_column=5)
-                        sheet.merge_cells(start_row=height_device_in_sheet, start_column=6, end_row=u_height_sheet, end_column=6)
-                        sheet.merge_cells(start_row=height_device_in_sheet, start_column=7, end_row=u_height_sheet, end_column=7)
-                        sheet.merge_cells(start_row=height_device_in_sheet, start_column=8, end_row=u_height_sheet, end_column=8)
-                        sheet.merge_cells(start_row=height_device_in_sheet, start_column=9, end_row=u_height_sheet, end_column=9)
-                        sheet.merge_cells(start_row=height_device_in_sheet, start_column=10, end_row=u_height_sheet, end_column=10)
+                        # kiểm tra xem device_type có phải là chassic không.
+                        is_chassis = False
+                        for device_type in device_type_parent:
+                            if device_type.model == device.device_type:
+                                is_chassis = True
+                        if is_chassis:
+                            # Thêm các thiết bị con
+                            device_child_list = get_devices_child(device.id)
+                            
+                            for device_child in device_child_list:
+                                position_child = device_child.parent_bay.custom_field_data['position_bay']
+                                # add item child
+                                # get data custom feild
+                                device_owner = ""
+                                year_of_investment = ""
+                                contract_number = ""
+                                custom_fields = device_child.get_custom_fields_by_group()
+                                for key, value in custom_fields[''].items():
+                                    if str(key) == 'Device owner' and value != None:
+                                        device_owner = value
+                                    elif str(key) == 'Year of investment' and value != None:
+                                        year_of_investment = value
+                                    elif str(key) == 'Contract number' and value != None:
+                                        contract_number = value
+                                item_child = [
+                                    rack.name,
+                                    position_child,
+                                    str(device_child.name),
+                                    str(device_child.role),
+                                    str(device_owner),
+                                    str(contract_number), 
+                                    str(device_child.device_type),
+                                    str(device_child.serial),
+                                    str(year_of_investment),
+                                    str(device_child.description),
+                                ]
+                                sheet.append(item_child)
+                                # copy giá trị của dòng hiện tại lên trên. 
+                                height_device_in_sheet = u_height_sheet - device.u_number + 1 # chiều cao của thiết bị.
+                                for col in range(2, 11):
+                                    sheet.cell(row=height_device_in_sheet, column=col).value = sheet.cell(row=u_height_sheet, column=col).value
+                                # Cộng 1 vào giá trị chiều cao của sheet
+                                u_height_sheet+= 1
+                            
+                            
+                            # Thay đổi position của cột và thêm item parent xuống cuối
+                            end_position = u_height_rack + device.u_number - 1
+                            item[1] = f"{u_height_rack}-{end_position}"
+                            sheet.append(item)
+                            
+                            # merg cell của thiết bị cha
+                            height_device_parrent_in_sheet = u_height_sheet - device.u_number + 1 # chiều cao của thiết bị.
+                            # copy data từ row position sang ô đầu tiên
+                            for col in range(2, 11):
+                                sheet.cell(row=height_device_parrent_in_sheet, column=col).value = sheet.cell(row=u_height_sheet, column=col).value
+                            
+                            #merg cells.
+                            sheet.merge_cells(start_row=height_device_parrent_in_sheet, start_column=2, end_row=u_height_sheet, end_column=2)
+                            sheet.merge_cells(start_row=height_device_parrent_in_sheet, start_column=3, end_row=u_height_sheet, end_column=3)
+                            sheet.merge_cells(start_row=height_device_parrent_in_sheet, start_column=4, end_row=u_height_sheet, end_column=4)
+                            sheet.merge_cells(start_row=height_device_parrent_in_sheet, start_column=5, end_row=u_height_sheet, end_column=5)
+                            sheet.merge_cells(start_row=height_device_parrent_in_sheet, start_column=6, end_row=u_height_sheet, end_column=6)
+                            sheet.merge_cells(start_row=height_device_parrent_in_sheet, start_column=7, end_row=u_height_sheet, end_column=7)
+                            sheet.merge_cells(start_row=height_device_parrent_in_sheet, start_column=8, end_row=u_height_sheet, end_column=8)
+                            sheet.merge_cells(start_row=height_device_parrent_in_sheet, start_column=9, end_row=u_height_sheet, end_column=9)
+                            sheet.merge_cells(start_row=height_device_parrent_in_sheet, start_column=10, end_row=u_height_sheet, end_column=10)
+                            
+                            
+                        else:
+                            sheet.append(item)
+                            # Từ cột thứ 3 đến cuối đều cần merg ô bằng chiều cao của thiết bị
+                            height_device_in_sheet = u_height_sheet - device.u_number + 1 # chiều cao của thiết bị.
+                            # copy data từ row position sang ô đầu tiên
+                            for col in range(3, 11):
+                                sheet.cell(row=height_device_in_sheet, column=col).value = sheet.cell(row=u_height_sheet, column=col).value
+                            
+                            #merg cells.
+                            sheet.merge_cells(start_row=height_device_in_sheet, start_column=3, end_row=u_height_sheet, end_column=3)
+                            sheet.merge_cells(start_row=height_device_in_sheet, start_column=4, end_row=u_height_sheet, end_column=4)
+                            sheet.merge_cells(start_row=height_device_in_sheet, start_column=5, end_row=u_height_sheet, end_column=5)
+                            sheet.merge_cells(start_row=height_device_in_sheet, start_column=6, end_row=u_height_sheet, end_column=6)
+                            sheet.merge_cells(start_row=height_device_in_sheet, start_column=7, end_row=u_height_sheet, end_column=7)
+                            sheet.merge_cells(start_row=height_device_in_sheet, start_column=8, end_row=u_height_sheet, end_column=8)
+                            sheet.merge_cells(start_row=height_device_in_sheet, start_column=9, end_row=u_height_sheet, end_column=9)
+                            sheet.merge_cells(start_row=height_device_in_sheet, start_column=10, end_row=u_height_sheet, end_column=10)
+                    else:
+                        sheet.append(item)
                 else:
                     # add item into sheet
                     empty_item = [rack.name,u_height_rack]
